@@ -1,0 +1,82 @@
+#include <SoftwareSerial.h>
+SoftwareSerial Bluetooth(13,12); // RX, TX
+#include<CheapStepper.h>
+int i=0,j=0;
+CheapStepper motor(7,8,9,10);
+#include <Wire.h>
+#include <VL53L0X.h>
+#define LONG_RANGE
+#define HIGH_ACCURACY
+VL53L0X sensor;
+float maxdist = 800;
+
+void setup() {
+  Bluetooth.begin(9600);
+  Serial.begin(9600);
+  Wire.begin();
+  motor.setRpm(150);
+
+  sensor.setTimeout(500);
+  if (!sensor.init())
+  {
+    Bluetooth.println("Failed to detect and initialize sensor!");
+    while (1) {}
+  }
+
+#if defined LONG_RANGE
+  // lower the return signal rate limit (default is 0.25 MCPS)
+  sensor.setSignalRateLimit(0.1);
+  // increase laser pulse periods (defaults are 14 and 10 PCLKs)
+  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
+#endif
+  #if defined HIGH_ACCURACY
+  // increase timing budget to 200 ms
+  sensor.setMeasurementTimingBudget(200000);
+  #endif
+}
+
+void loop() {
+  
+while(i<=360){
+    motor.moveDegreesCW(2);
+    //delay(50);
+    i+=2;
+    //Serial.print(sensor.readRangeSingleMillimeters());
+   //Bluetooth.print(sensor.readRangeSingleMillimeters());
+    //if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+    int r = sensor.readRangeSingleMillimeters();    //Get distance from sensor
+    if (r > maxdist)                                //Limit the distance to maximum set distance above
+    {
+      r = maxdist;
+    }
+    Serial.print(i);          //Print the values to serial port
+    Serial.print(",");
+    Serial.print(r);
+    Serial.println(",");
+
+  
+  //Bluetooth.println();
+  }
+  while(j<=360){
+    motor.moveDegreesCCW(2);
+    //delay(50);
+    j+=2;
+    //Serial.print(sensor.readRangeSingleMillimeters());
+    //Bluetooth.print(sensor.readRangeSingleMillimeters());
+    //if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+    int r = sensor.readRangeSingleMillimeters();    //Get distance from sensor
+      if (r > maxdist)                                //Limit the distance to maximum set distance above
+      {
+        r = maxdist;
+      }
+      Serial.print(j);          //Print the values to serial port
+      Serial.print(",");
+      Serial.print(r);
+      Serial.println(",");
+  
+  //Bluetooth.println();
+  }
+  i=0;
+  j=0;
+}
