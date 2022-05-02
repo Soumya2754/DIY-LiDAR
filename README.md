@@ -7,3 +7,11 @@ LiDAR technology is being used in robotics for the perception of the environment
 
 The goal of this project was to make a homemade LiDAR with a minimum budget and components. After tedious testing and fine-tuning we had a functional LiDAR which could map for obstacles within a certain range of the LiDAR( approx 2m ). Further applications of this project could be obstacle detection/avoidance RC cars and mapping of the surrounding environment which can be further extended to path planning and automated navigation using SLAM in ROS.
 
+References:
+Homemade LIDAR sensor with Arduino & Processing: https://www.youtube.com/watch?v=fQ2iB7qkrUg
+https://lastminuteengineers.com/28byj48-stepper-motor-arduino-tutorial/	
+Arduino Processing and  Bluetooth : https://www.youtube.com/watch?v=VGJCj0Hr1vQ
+Serial Communication with Processing :: Video #2 :: Arduino Serial Communication Series: https://youtu.be/69EJkn65T_8
+https://www.teachmemicro.com/arduino-bluetooth/	
+Measure Distance with VL53L0X 6 pin Laser module with Arduino : https://www.youtube.com/watch?v=S2jaAQEv3Yo
+https://www.arduino.cc 
