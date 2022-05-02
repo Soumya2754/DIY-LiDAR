@@ -1,0 +1,383 @@
+#include <SoftwareSerial.h>
+SoftwareSerial Bluetooth(13, 12); // RX, TX
+int Data=0; // the data received
+ #include <Wire.h>
+#include <VL53L0X.h>
+VL53L0X sensor;
+#define LONG_RANGE
+#define HIGH_ACCURACY
+int i=0,dist=0;
+#include<CheapStepper.h>
+CheapStepper motor(7,8,9,10);
+void setup() {
+  Bluetooth.begin(9600);
+  Serial.begin(9600);
+  Bluetooth.println("Waiting for command...");
+  pinMode(2,OUTPUT);
+  pinMode(3,OUTPUT);
+  pinMode(4,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+  pinMode(11,OUTPUT);
+  Wire.begin();
+  motor.setRpm(150);
+ delay(1000);
+  sensor.setTimeout(500);
+  if (!sensor.init())
+  {
+    Bluetooth.println("Failed to detect and initialize sensor!");
+    while (1) {}
+  }
+
+#if defined LONG_RANGE
+  // lower the return signal rate limit (default is 0.25 MCPS)
+  sensor.setSignalRateLimit(0.1);
+  // increase laser pulse periods (defaults are 14 and 10 PCLKs)
+  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
+#endif
+#if defined HIGH_ACCURACY
+  // increase timing budget to 200 ms
+  sensor.setMeasurementTimingBudget(200000);
+#endif
+}
+ 
+void loop() 
+{
+        analogWrite(6,120);
+        /*analogWrite(11,100);*/
+        if(Bluetooth.available())
+        { 
+          Data = Bluetooth.read();
+          Bluetooth.println(Data);
+        }
+        if(Serial.available())
+        {
+          Data = Serial.read();
+          Serial.println(Data);
+        }
+          if(Data=='1')
+          {  
+            Serial.println("GOING FORWARD");
+             Bluetooth.println("GOING FORWARD");
+             digitalWrite(2,HIGH);
+             digitalWrite(3,LOW);
+             digitalWrite(5,HIGH);
+             digitalWrite(4,LOW); 
+             while (1)
+             {
+                  motor.moveDegreesCCW(i);
+                  while ( i<=30)
+                  {
+                      motor.moveDegreesCW(5);
+                      i+=5;
+                      dist = sensor.readRangeSingleMillimeters();
+                      Bluetooth.print(i);
+                      Bluetooth.print(",");
+                      Bluetooth.print(dist);
+                      Bluetooth.print(",");
+                      if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT");}
+                   }
+                   while (i<=90)
+                   {
+                        motor.moveDegreesCW(5);
+                        i+=5;
+                        dist = sensor.readRangeSingleMillimeters();
+                        Bluetooth.print(i);
+                        Bluetooth.print(",");
+                        Bluetooth.print(dist);
+                        Bluetooth.print(",");
+                        if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+                        if(dist<80)
+                        {
+                           /* Bluetooth.println("STOPPING");
+                              digitalWrite(2,LOW);
+                              digitalWrite(3,LOW);
+                              digitalWrite(5,LOW);
+                              digitalWrite(4,LOW);*/
+                              Bluetooth.println("GOING BACK");
+                              digitalWrite(3,HIGH);
+                              digitalWrite(2,LOW);
+                              digitalWrite(4,HIGH);
+                              digitalWrite(5,LOW); 
+                              delay(1500);
+                               /*  Bluetooth.println("TURNING RIGHT");
+                               digitalWrite(2,HIGH);
+                               digitalWrite(3,LOW);
+                              digitalWrite(4,LOW);
+                              digitalWrite(5,LOW);
+                              delay(1000); */
+                              Bluetooth.println("TURNING RIGHT");
+                              digitalWrite(2,HIGH);
+                              digitalWrite(3,LOW);
+                              digitalWrite(4,HIGH);
+                              digitalWrite(5,LOW); 
+                              delay(1000);
+                              Bluetooth.println("STOPPING");
+                               digitalWrite(2,LOW);
+                               digitalWrite(3,LOW);
+                               digitalWrite(5,LOW);
+                               digitalWrite(4,LOW);
+                              break;
+                        }
+                    }
+                    if(i<90)
+                    {
+                      Bluetooth.println("waiting for next command");
+                      break;
+                    }
+                    while (i<=150)
+                    {
+                          motor.moveDegreesCW(5);
+                          //delay(50);
+                          i+=5;
+                          dist = sensor.readRangeSingleMillimeters();
+                         Bluetooth.print(i);
+                          Bluetooth.print(",");
+                         Bluetooth.print(dist);
+                         Bluetooth.print(",");
+                        if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+                        if(dist<80)
+                        {
+                            /*Bluetooth.println("STOPPING");
+                               digitalWrite(2,LOW);
+                               digitalWrite(3,LOW);
+                               digitalWrite(5,LOW);
+                               digitalWrite(4,LOW);*/
+                               Bluetooth.println("GOING BACK");
+                              digitalWrite(3,HIGH);
+                              digitalWrite(2,LOW);
+                              digitalWrite(4,HIGH);
+                              digitalWrite(5,LOW); 
+                              delay(1500);
+                              Bluetooth.println("TURNING LEFT");
+                               digitalWrite(3,HIGH);
+                               digitalWrite(2,LOW);
+                               digitalWrite(5,HIGH);
+                               digitalWrite(4,LOW);
+                               delay(1000);
+                               Bluetooth.println("STOPPING");
+                               digitalWrite(2,LOW);
+                               digitalWrite(3,LOW);
+                               digitalWrite(5,LOW);
+                               digitalWrite(4,LOW);
+                              break;
+                          }
+                    }
+                    if(i<150)
+                    {
+                       Bluetooth.println("waiting for next command");
+                        break;
+                    }
+                    while(i<=180)
+                    {
+                         motor.moveDegreesCW(5);
+                          //delay(50);
+                         i+=5;
+                         dist = sensor.readRangeSingleMillimeters();
+                         Bluetooth.print(i);
+                         Bluetooth.print(",");
+                         Bluetooth.print(dist);
+                         Bluetooth.print(",");
+                         if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+                        
+                    }
+                    while ( i>=150)
+                    {
+                         motor.moveDegreesCCW(5);
+                          //delay(50);
+                         i-=5;
+                         dist = sensor.readRangeSingleMillimeters();
+                         Bluetooth.print(i);
+                         Bluetooth.print(",");
+                         Bluetooth.print(dist);
+                         Bluetooth.print(",");
+                         if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT");}
+                     }
+                     while (i>=90)
+                     {
+                        motor.moveDegreesCCW(5);
+                        //delay(50);
+                        i-=5;
+                        dist = sensor.readRangeSingleMillimeters();
+                        Bluetooth.print(i);
+                        Bluetooth.print(",");
+                        Bluetooth.print(dist);
+                        Bluetooth.print(",");
+                        if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+                        if(dist<80){
+                      /*Bluetooth.println("STOPPING");
+                         digitalWrite(2,LOW);
+                         digitalWrite(3,LOW);
+                         digitalWrite(5,LOW);
+                         digitalWrite(4,LOW);*/
+                         Bluetooth.println("GOING BACK");
+                        digitalWrite(3,HIGH);
+                        digitalWrite(2,LOW);
+                        digitalWrite(4,HIGH);
+                        digitalWrite(5,LOW); 
+                        delay(1500);
+                         Bluetooth.println("TURNING LEFT");
+                         digitalWrite(3,HIGH);
+                         digitalWrite(2,LOW);
+                         digitalWrite(5,HIGH);
+                         digitalWrite(4,LOW);
+                         delay(2000);
+                        Bluetooth.println("STOPPING");
+                         digitalWrite(2,LOW);
+                         digitalWrite(3,LOW);
+                         digitalWrite(5,LOW);
+                         digitalWrite(4,LOW);
+                        break;
+                    }
+                    if(i>90){
+                      Bluetooth.println("waiting for next command");
+                      break;
+                    }
+                      }
+                    while (i>=30){
+                      motor.moveDegreesCCW(5);
+                      //delay(50);
+                      i-=5;
+                      dist = sensor.readRangeSingleMillimeters();
+                     Bluetooth.print(i);
+                      Bluetooth.print(",");
+                     Bluetooth.print(dist);
+                     Bluetooth.print(",");
+                    if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+                    if(dist<80){
+                      /*Bluetooth.println("STOPPING");
+                         digitalWrite(2,LOW);
+                         digitalWrite(3,LOW);
+                         digitalWrite(5,LOW);
+                         digitalWrite(4,LOW);*/
+                         Bluetooth.println("GOING BACK");
+                        digitalWrite(3,HIGH);
+                        digitalWrite(2,LOW);
+                        digitalWrite(4,HIGH);
+                        digitalWrite(5,LOW); 
+                        delay(1500);
+                         Bluetooth.println("TURNING RIGHT");
+                         digitalWrite(2,HIGH);
+                         digitalWrite(3,LOW);
+                        digitalWrite(4,HIGH);
+                        digitalWrite(5,LOW);
+                        delay(2000);
+                         Bluetooth.println("STOPPING");
+                         digitalWrite(2,LOW);
+                         digitalWrite(3,LOW);
+                         digitalWrite(5,LOW);
+                         digitalWrite(4,LOW);
+                        break;
+                      }
+                      }
+                      if(i>30){
+                        Bluetooth.println("waiting for next command");
+                        break;
+                      }
+                     while(i>=0)
+                     {
+                       motor.moveDegreesCCW(5);
+                      //delay(50);
+                      i-=5;
+                      dist = sensor.readRangeSingleMillimeters();
+                      Bluetooth.print(i);
+                      Bluetooth.print(",");
+                     Bluetooth.print(dist);
+                     Bluetooth.print(",");
+                       if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT");}
+                      }
+                  }
+          }
+          else if(Data=='0'){
+             Serial.println("STOPPING");
+             Bluetooth.println("STOPPING");
+             digitalWrite(2,LOW);
+             digitalWrite(3,LOW);
+             digitalWrite(5,LOW);
+             digitalWrite(4,LOW);
+             
+          }
+          else if(Data=='2')
+          {
+                 Serial.println("TURNING RIGHT");
+                 Bluetooth.println("TURNING RIGHT");
+                 digitalWrite(2,HIGH);
+                 digitalWrite(3,LOW);
+                digitalWrite(4,LOW);
+                digitalWrite(5,LOW);
+                if(i>=0&&i<120){
+                  while(i!=120){
+                    motor.moveDegreesCW(1);
+                    i++;
+                  }
+                  }
+               if(i>120){
+                while(i!=120){
+                  motor.moveDegreesCCW(1);
+                  i--; 
+                }
+               }
+               while(i<=180){
+                motor.moveDegreesCW(5);
+              //delay(50);
+              i+=5;
+              dist = sensor.readRangeSingleMillimeters();
+             Bluetooth.print(i);
+              Bluetooth.print(",");
+             Bluetooth.print(dist);
+             Bluetooth.print(",");
+            if (sensor.timeoutOccurred()) 
+            { Bluetooth.print(" TIMEOUT"); }
+            
+                if((sensor.readRangeSingleMillimeters())<50){
+                Bluetooth.println("obstacle on the right. Waiting for command");
+                 digitalWrite(2,LOW);
+                 digitalWrite(3,LOW);
+                 digitalWrite(5,LOW);
+                 digitalWrite(4,LOW);
+                 break;
+               }}
+               while(i>0){
+                motor.moveDegreesCCW(1);
+                i--;
+               }
+           }
+          else if(Data=='3')
+          {
+                 Serial.println("TURNING LEFT");
+                 Bluetooth.println("TURNING LEFT");
+                 digitalWrite(3,LOW);
+                 digitalWrite(2,LOW);
+                 digitalWrite(5,HIGH);
+                 digitalWrite(4,LOW);
+               if(i>=0){
+                while(i!=0){
+                  motor.moveDegreesCCW(1);
+                  i--; 
+                }
+               }
+               while(i<=60){
+                motor.moveDegreesCW(5);
+              //delay(50);
+              i+=5;
+              dist = sensor.readRangeSingleMillimeters();
+             Bluetooth.print(i);
+              Bluetooth.print(",");
+             Bluetooth.print(dist);
+             Bluetooth.print(",");
+            if (sensor.timeoutOccurred()) { Bluetooth.print(" TIMEOUT"); }
+                if((sensor.readRangeSingleMillimeters())<50){
+                Bluetooth.println("obstacle on the left. Waiting for command");
+                 digitalWrite(2,LOW);
+                 digitalWrite(3,LOW);
+                 digitalWrite(5,LOW);
+                 digitalWrite(4,LOW);
+                 break;
+               }}
+               while(i>0){
+                motor.moveDegreesCCW(1);
+                i--;
+               }
+          }
+        }
